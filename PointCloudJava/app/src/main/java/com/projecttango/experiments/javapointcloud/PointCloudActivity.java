@@ -20,6 +20,7 @@ import com.google.atap.tango.ux.UxExceptionEvent;
 import com.google.atap.tango.ux.UxExceptionEventListener;
 import com.google.atap.tangoservice.Tango;
 import com.google.atap.tangoservice.Tango.OnTangoUpdateListener;
+import com.google.atap.tangoservice.TangoCameraIntrinsics;
 import com.google.atap.tangoservice.TangoConfig;
 import com.google.atap.tangoservice.TangoCoordinateFramePair;
 import com.google.atap.tangoservice.TangoErrorException;
@@ -47,15 +48,17 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.List;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.FloatBuffer;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 /**
  * Main Activity class for the Point Cloud Sample. Handles the connection to the {@link Tango}
  * service and propagation of Tango XyzIj data to OpenGL and Layout views. OpenGL rendering logic is
- * delegated to the {@link PCrenderer} class.
+ * delegated to the
  */
 public class PointCloudActivity extends Activity {
 
@@ -78,7 +81,7 @@ public class PointCloudActivity extends Activity {
     private String mServiceVersion;
     private boolean mIsTangoServiceConnected;
     private TangoPoseData mPose;
-
+    private TangoCameraIntrinsics ccIntrinsics;
     private TangoUx mTangoUx;
     private TangoUxLayout mTangoUxLayout;
 
@@ -209,6 +212,7 @@ public class PointCloudActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // Check which request we're responding to
+
         if (requestCode == Tango.TANGO_INTENT_ACTIVITYCODE) {
             Log.i(TAG, "Triggered");
             // Make sure the request was successful
@@ -236,6 +240,7 @@ public class PointCloudActivity extends Activity {
                 Toast.makeText(getApplicationContext(), R.string.TangoError, Toast.LENGTH_SHORT)
                         .show();
             }
+
             setUpExtrinsics();
         }
     }
@@ -251,6 +256,7 @@ public class PointCloudActivity extends Activity {
     public boolean onTouchEvent(MotionEvent event) {
         return mRenderer.onTouchEvent(event);
     }
+
 
     private void setUpExtrinsics() {
         // Set device to imu matrix in Model Matrix Calculator.
@@ -333,6 +339,16 @@ public class PointCloudActivity extends Activity {
                     try {
                         TangoPoseData pointCloudPose = mTango.getPoseAtTime(mCurrentTimeStamp,
                              framePairs.get(0));
+
+
+                        /*List<Float> myList = new ArrayList<Float>();
+                        for (int i =0; i < xyzIj.xyzCount; i +=2){
+                            //myList.add(xyzIj.xyz.get(i));
+                            if(xyzIj.xyz.get(i) < 1 && xyzIj.xyz.get(i) >0){
+                                Log.i(TAG, "WATCH OUT!");
+                            }
+                        }*/
+
                         mPointCount = xyzIj.xyzCount;
                         if(!mRenderer.isValid()){
                             return;
@@ -420,6 +436,22 @@ public class PointCloudActivity extends Activity {
                                     }*/
                                 }
                                 synchronized (depthLock) {
+                                    /*if(mRenderer.getPointCloud().getAverageZ() < 1 ){
+                                        Log.i(TAG, "Less than 1 =" + mRenderer.getPointCloud().getAverageZ());
+
+                                    }
+                                    else if(mRenderer.getPointCloud().getAverageZ() > 1 && mRenderer.getPointCloud().getAverageZ() < 1.5){
+                                        Log.i(TAG, "Between 1 and 1.5 = " + mRenderer.getPointCloud().getAverageZ());
+
+                                    }
+                                    else if(mRenderer.getPointCloud().getAverageZ() > 1.5 && mRenderer.getPointCloud().getAverageZ() < 2){
+                                        Log.i(TAG, "Between 1.5 and 2 = " + mRenderer.getPointCloud().getAverageZ());
+
+                                    }
+                                    else if(mRenderer.getPointCloud().getAverageZ() > 2 && mRenderer.getPointCloud().getAverageZ() < 2.5){
+                                        Log.i(TAG, "Between 2 and 2.5 = " + mRenderer.getPointCloud().getAverageZ());
+
+                                    }*/
                                     // Display number of points in the point cloud
                                     /*mPointCountTextView.setText(Integer.toString(mPointCount));
                                     mFrequencyTextView.setText(""
